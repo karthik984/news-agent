@@ -13,9 +13,18 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 # ---- Configure your topics here ----
 TOPICS = [
-    "Iran US war update",
-    "AI engineering news",
-    "stock market update today",
+    {
+        "name": "Iran US War Update",
+        "query": "Iran US war update today site:reuters.com OR site:bbc.com"
+    },
+    {
+        "name": "AI Engineering News",
+        "query": "AI engineering news this week site:techcrunch.com OR site:venturebeat.com"
+    },
+    {
+        "name": "Stock Market Update",
+        "query": "US stock market today dow nasdaq S&P site:marketwatch.com OR site:finance.yahoo.com"
+    },
 ]
 # ------------------------------------
 
@@ -38,9 +47,9 @@ def send_telegram(message: str):
     }
     requests.post(url, json=payload)
 
-def get_news_digest(topic: str) -> str:
-    print(f"Researching: {topic}")
-    search_results = search_web(topic)
+def get_news_digest(query: str) -> str:
+    print(f"Researching: {query}")
+    search_results = search_web(query)
 
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",
@@ -48,7 +57,7 @@ def get_news_digest(topic: str) -> str:
         system="You are a news summarizer. Given search results, write a concise 3-5 sentence summary of the latest developments. Be factual and direct. Use plain text, no markdown.",
         messages=[{
             "role": "user",
-            "content": f"Topic: {topic}\n\nSearch Results:\n{search_results}\n\nWrite a concise news summary."
+            "content": f"Topic: {query}\n\nSearch Results:\n{search_results}\n\nWrite a concise news summary."
         }]
     )
     return response.content[0].text
@@ -58,8 +67,8 @@ def run():
     full_digest = "🗞 *Daily News Digest*\n\n"
 
     for topic in TOPICS:
-        summary = get_news_digest(topic)
-        full_digest += f"*{topic.upper()}*\n{summary}\n\n"
+        summary = get_news_digest(topic["query"])
+        full_digest += f"*{topic['name'].upper()}*\n{summary}\n\n"
         full_digest += "─" * 30 + "\n\n"
 
     send_telegram(full_digest)
