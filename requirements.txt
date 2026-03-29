@@ -1,0 +1,4 @@
+anthropic
+ddgs
+requests
+python-dotenv
